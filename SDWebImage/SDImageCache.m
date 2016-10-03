@@ -9,6 +9,7 @@
 #import "SDImageCache.h"
 #import "SDWebImageDecoder.h"
 #import "UIImage+MultiFormat.h"
+#import "UIImage+FixOrient.h"
 #import <CommonCrypto/CommonDigest.h>
 
 // See https://github.com/rs/SDWebImage/pull/1141 for discussion
@@ -212,6 +213,9 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
 
             if (image && (recalculate || !data)) {
 #if TARGET_OS_IPHONE
+                // Applied fixes from https://github.com/samkass/SDWebImage/commit/4c609886cf4cdbef4dcd74ffcf60e72d6fee5079
+                UIImage *orientedImage = [image fixOrientation];
+                
                 // We need to determine if the image is a PNG or a JPEG
                 // PNGs are easier to detect because they have a unique signature (http://www.w3.org/TR/PNG-Structure.html)
                 // The first eight bytes of a PNG file always contain the following (decimal) values:
@@ -231,10 +235,10 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
                 }
 
                 if (imageIsPng) {
-                    data = UIImagePNGRepresentation(image);
+                    data = UIImagePNGRepresentation(orientedImage);
                 }
                 else {
-                    data = UIImageJPEGRepresentation(image, (CGFloat)1.0);
+                    data = UIImageJPEGRepresentation(orientedImage, (CGFloat)1.0);
                 }
 #else
                 data = [NSBitmapImageRep representationOfImageRepsInArray:image.representations usingType: NSJPEGFileType properties:nil];
